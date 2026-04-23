@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CocoaGuard — Detect Disease</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --brown-dark: #2C1A0E;
+            --brown-mid: #5C3317;
+            --gold: #C8922A;
+            --gold-light: #E8B84B;
+            --cream: #FDF6EC;
+            --cream-dark: #F5E6D0;
+            --green-dark: #1B4332;
+            --green-mid: #2D6A4F;
+            --green-light: #52B788;
+            --green-pale: #D8F3DC;
+            --text-dark: #1A0F08;
+            --text-mid: #4A3728;
+            --text-light: #8B7355;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #F0F7F0;
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        /* ── NAVBAR ── */
+        nav {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 6%;
+            background: white;
+            border-bottom: 1px solid rgba(45, 106, 79, 0.12);
+            box-shadow: 0 2px 20px rgba(27, 67, 50, 0.06);
+            position: sticky; top: 0; z-index: 10;
+        }
+
+        .nav-logo {
+            font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 900;
+            color: var(--brown-dark); text-decoration: none;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .nav-logo span { color: var(--green-mid); }
+        .nav-logo-icon {
+            width: 34px; height: 34px; background: var(--green-dark); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1rem;
+        }
+
+        .nav-right { display: flex; align-items: center; gap: 0.8rem; }
+
+        .nav-user {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.88rem; color: var(--text-mid); font-weight: 500;
+        }
+
+        .nav-avatar {
+            width: 32px; height: 32px;
+            background: var(--green-pale); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-weight: 700; color: var(--green-dark);
+            border: 2px solid var(--green-light);
+        }
+
+        .nav-btn {
+            padding: 0.45rem 1.1rem; border-radius: 50px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; text-decoration: none;
+        }
+
+        .nav-btn-dashboard {
+            background: var(--green-pale); color: var(--green-dark);
+            border: 1.5px solid rgba(45,106,79,0.2);
+        }
+        .nav-btn-dashboard:hover { background: var(--green-dark); color: white; }
+
+        .nav-btn-home {
+            background: transparent; color: var(--text-mid);
+            border: 1.5px solid rgba(45,106,79,0.15);
+        }
+        .nav-btn-home:hover { background: var(--cream-dark); color: var(--brown-dark); }
+
+        .nav-btn-logout {
+            background: transparent; color: var(--text-mid);
+            border: 1.5px solid rgba(45,106,79,0.15);
+        }
+        .nav-btn-logout:hover { background: #FFF0F0; color: #C0392B; border-color: #FADADD; }
+
+        /* ── MAIN ── */
+        .main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 3rem 2rem 5rem;
+        }
+
+        /* ── PAGE HEADER ── */
+        .page-header {
+            text-align: center; margin-bottom: 3rem;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .page-label {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: var(--green-pale); color: var(--green-dark);
+            border-radius: 50px; padding: 0.35rem 1rem;
+            font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em;
+            text-transform: uppercase; margin-bottom: 1rem;
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            font-weight: 900; color: var(--green-dark); margin-bottom: 0.6rem;
+        }
+
+        .page-subtitle {
+            font-size: 0.95rem; color: var(--text-light);
+            max-width: 420px; margin: 0 auto; line-height: 1.7;
+        }
+
+        /* ── DETECT GRID ── */
+        .detect-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 2rem; align-items: start;
+        }
+
+        /* ── PANEL ── */
+        .panel {
+            background: white; border-radius: 24px; padding: 2rem;
+            box-shadow: 0 4px 24px rgba(27, 67, 50, 0.08);
+            border: 1px solid rgba(45, 106, 79, 0.08);
+            animation: fadeUp 0.5s 0.1s ease both;
+        }
+
+        .panel-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem; font-weight: 700;
+            color: var(--green-dark); margin-bottom: 1.5rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+
+        .panel-title::before {
+            content: ''; width: 4px; height: 20px;
+            background: var(--green-mid); border-radius: 2px;
+        }
+
+        /* ── UPLOAD ZONE ── */
+        .upload-zone {
+            border: 2px dashed rgba(45, 106, 79, 0.3);
+            border-radius: 18px; padding: 2.5rem 1.5rem;
+            text-align: center; cursor: pointer;
+            transition: all 0.3s; background: #F8FCF9;
+            position: relative; overflow: hidden;
+        }
+
+        .upload-zone:hover, .upload-zone.drag-over {
+            border-color: var(--green-light);
+            background: var(--green-pale); transform: scale(1.01);
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute; inset: 0; opacity: 0;
+            cursor: pointer; width: 100%; height: 100%;
+        }
+
+        .upload-icon {
+            width: 64px; height: 64px; background: var(--green-pale);
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 1.8rem;
+            margin: 0 auto 1rem; transition: transform 0.3s;
+        }
+
+        .upload-zone:hover .upload-icon { transform: scale(1.1) rotate(-5deg); }
+
+        .upload-text { font-weight: 600; color: var(--green-dark); margin-bottom: 0.3rem; }
+        .upload-sub { font-size: 0.82rem; color: var(--text-light); }
+
+        .upload-formats {
+            display: flex; justify-content: center; gap: 0.5rem;
+            margin-top: 1rem; flex-wrap: wrap;
+        }
+
+        .upload-format-tag {
+            background: white; border: 1px solid rgba(45,106,79,0.2);
+            border-radius: 50px; padding: 0.2rem 0.7rem;
+            font-size: 0.72rem; font-weight: 600; color: var(--green-mid);
+        }
+
+        /* ── PREVIEW ── */
+        .preview-box {
+            display: none; margin-top: 1.2rem;
+            border-radius: 14px; overflow: hidden;
+            position: relative; background: #f0f0f0;
+        }
+
+        .preview-box img { width: 100%; max-height: 260px; object-fit: cover; display: block; }
+
+        .preview-remove {
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(0,0,0,0.55); color: white;
+            border: none; border-radius: 50%;
+            width: 28px; height: 28px; cursor: pointer;
+            font-size: 0.9rem; display: flex;
+            align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .preview-remove:hover { background: rgba(200,0,0,0.7); }
+
+        .preview-name {
+            margin-top: 0.6rem; font-size: 0.82rem;
+            color: var(--text-light); text-align: center;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* ── ANALYSE BUTTON ── */
+        .btn-analyse {
+            width: 100%; margin-top: 1.2rem; padding: 1rem;
+            background: var(--green-dark); color: white;
+            border: none; border-radius: 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.25s;
+            display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+        }
+        .btn-analyse:hover:not(:disabled) {
+            background: var(--green-mid); transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(27,67,50,0.25);
+        }
+        .btn-analyse:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+        /* ── TIPS ── */
+        .tips-panel {
+            background: var(--green-pale); border-radius: 14px;
+            padding: 1.2rem 1.4rem; margin-top: 1.2rem;
+        }
+        .tips-title { font-size: 0.82rem; font-weight: 700; color: var(--green-dark); margin-bottom: 0.7rem; }
+        .tip { font-size: 0.82rem; color: var(--green-dark); margin-bottom: 0.4rem; line-height: 1.5; opacity: 0.85; }
+        .tip:last-child { margin-bottom: 0; }
+
+        /* ── RESULT PANEL ── */
+        .result-panel { animation: fadeUp 0.5s 0.2s ease both; }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            background: white; border-radius: 24px; padding: 3rem 2rem;
+            text-align: center; box-shadow: 0 4px 24px rgba(27,67,50,0.08);
+            border: 2px dashed rgba(45,106,79,0.15);
+        }
+        .empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+        .empty-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--text-light); margin-bottom: 0.4rem; }
+        .empty-desc { font-size: 0.85rem; color: var(--text-light); line-height: 1.6; }
+
+        /* ── LOADING STATE ── */
+        .loading-state {
+            display: none; background: white; border-radius: 24px;
+            padding: 3rem 2rem; text-align: center;
+            box-shadow: 0 4px 24px rgba(27,67,50,0.08);
+        }
+
+        .loading-spinner {
+            width: 52px; height: 52px;
+            border: 4px solid var(--green-pale);
+            border-top-color: var(--green-mid); border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin: 0 auto 1.2rem;
+        }
+
+        .loading-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--green-dark); margin-bottom: 0.4rem; }
+        .loading-steps { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 1rem; }
+        .loading-step { font-size: 0.82rem; color: var(--text-light); display: flex; align-items: center; justify-content: center; gap: 0.4rem; }
+        .loading-step.active { color: var(--green-mid); font-weight: 600; }
+        .loading-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-light); animation: pulse 1s infinite; }
+
+        /* ── RESULT CARD ── */
+        .result-card {
+            display: none; background: white; border-radius: 24px; overflow: hidden;
+            box-shadow: 0 4px 24px rgba(27,67,50,0.1);
+            border: 1px solid rgba(45,106,79,0.08);
+        }
+
+        .result-header { padding: 1.5rem 2rem; }
+        .result-header.healthy { background: linear-gradient(135deg, #1B4332, #2D6A4F); }
+        .result-header.disease { background: linear-gradient(135deg, #3D1A08, #7A3B1E); }
+        .result-header.warning { background: linear-gradient(135deg, #7A4F00, #C8922A); }
+
+        .result-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: rgba(255,255,255,0.18); border-radius: 50px;
+            padding: 0.4rem 1rem; font-size: 0.78rem; font-weight: 700;
+            color: white; letter-spacing: 0.06em; text-transform: uppercase;
+        }
+
+        .result-disease-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem; font-weight: 900; color: white; margin-top: 0.8rem;
+        }
+
+        .result-body { padding: 1.8rem 2rem; }
+
+        .metrics-row {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1rem; margin-bottom: 1.8rem;
+        }
+
+        .metric {
+            background: #F8FCF9; border-radius: 14px; padding: 1rem;
+            text-align: center; border: 1px solid rgba(45,106,79,0.1);
+        }
+
+        .metric-label { font-size: 0.72rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; }
+        .metric-value { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 900; color: var(--green-dark); }
+        .metric-value.severity-severe { color: #C0392B; }
+        .metric-value.severity-moderate { color: #D68910; }
+        .metric-value.severity-mild { color: #1E8449; }
+        .metric-value.severity-none { color: var(--green-mid); }
+
+        .conf-bar-wrap { margin-bottom: 1.8rem; }
+        .conf-bar-label { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; color: var(--text-mid); margin-bottom: 0.5rem; }
+        .conf-bar-track { height: 8px; background: #E8F5E9; border-radius: 4px; overflow: hidden; }
+        .conf-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(to right, var(--green-mid), var(--green-light)); transition: width 1s ease; width: 0%; }
+
+        .advice-box {
+            background: linear-gradient(135deg, #F0FFF4, #E8F5E9);
+            border-radius: 16px; padding: 1.4rem 1.6rem;
+            border-left: 4px solid var(--green-mid);
+        }
+        .advice-box.severe { background: linear-gradient(135deg, #FFF5F5, #FDECEA); border-left-color: #C0392B; }
+        .advice-box.moderate { background: linear-gradient(135deg, #FFFBF0, #FEF9E7); border-left-color: #D68910; }
+
+        .advice-label { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green-dark); margin-bottom: 0.7rem; display: flex; align-items: center; gap: 0.4rem; }
+        .advice-text { font-size: 0.9rem; line-height: 1.75; color: var(--text-mid); }
+
+        .btn-reset {
+            width: 100%; margin-top: 1.2rem; padding: 0.8rem;
+            background: transparent; color: var(--green-dark);
+            border: 1.5px solid rgba(45,106,79,0.3); border-radius: 12px;
+            font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-reset:hover { background: var(--green-pale); border-color: var(--green-light); }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .detect-grid { grid-template-columns: 1fr; }
+            .main { padding: 2rem 1rem 4rem; }
+            .nav-right { gap: 0.5rem; }
+        }
+        @media (max-width: 400px) {
+            .metrics-row { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+    <a href="/" class="nav-logo">
+        <div class="nav-logo-icon">🌿</div>
+        Cocoa<span>Guard</span>
+    </a>
+    <div class="nav-right">
+        <div class="nav-user">
+            <div class="nav-avatar">{{ session['user_name'][0].upper() }}</div>
+            <span>{{ session['user_name'] }}</span>
+        </div>
+        <a href="/dashboard" class="nav-btn nav-btn-dashboard">📊 Dashboard</a>
+        <a href="/" class="nav-btn nav-btn-home">← Home</a>
+        <a href="/logout" class="nav-btn nav-btn-logout">Logout</a>
+    </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+    <div class="page-header">
+        <div class="page-label">🔬 AI Analysis</div>
+        <h1 class="page-title">Cocoa Pod Disease Detection</h1>
+        <p class="page-subtitle">Upload a clear photo of your cocoa pod and our AI will detect any diseases instantly.</p>
+    </div>
+
+    <div class="detect-grid">
+
+        <!-- LEFT: UPLOAD -->
+        <div class="panel">
+            <div class="panel-title">Upload Pod Image</div>
+
+            <div class="upload-zone" id="uploadZone">
+                <input type="file" id="imageInput" accept="image/*">
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">Drop your image here</div>
+                <div class="upload-sub">or click to browse files</div>
+                <div class="upload-formats">
+                    <span class="upload-format-tag">JPG</span>
+                    <span class="upload-format-tag">PNG</span>
+                    <span class="upload-format-tag">WEBP</span>
+                </div>
+            </div>
+
+            <div class="preview-box" id="previewBox">
+                <img id="previewImg" src="" alt="Preview">
+                <button class="preview-remove" id="removeBtn" title="Remove">✕</button>
+            </div>
+            <div class="preview-name" id="previewName"></div>
+
+            <div id="errorMsg" style="display:none; margin-top:1rem; padding:0.8rem 1rem; background:#FFF0F0; border:1.5px solid #FADADD; border-radius:12px; color:#C0392B; font-size:0.85rem; font-weight:600; text-align:center;">
+                 ❌ <span id="errorText">Something went wrong.</span>
+            </div>
+
+            <button class="btn-analyse" id="analyseBtn" onclick="analyseImage()">
+                🔍 Analyse Pod
+            </button>
+
+            <div class="tips-panel">
+                <div class="tips-title">📌 Tips for best results</div>
+                <div class="tip">✓ Use good natural lighting</div>
+                <div class="tip">✓ Keep the pod in focus and centred</div>
+                <div class="tip">✓ Avoid blurry or dark images</div>
+                <div class="tip">✓ Show the full pod if possible</div>
+            </div>
+        </div>
+
+        <!-- RIGHT: RESULTS -->
+        <div class="result-panel">
+
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">💊</div>
+                <div class="empty-title">No analysis yet</div>
+                <div class="empty-desc">Upload a cocoa pod image on the left and click Analyse to see your results here.</div>
+            </div>
+
+            <div class="loading-state" id="loadingState">
+                <div class="loading-spinner"></div>
+                <div class="loading-title">Analysing your pod...</div>
+                <div class="loading-steps">
+                    <div class="loading-step active" id="step1"><div class="loading-dot"></div> Processing image</div>
+                    <div class="loading-step" id="step2">⬜ Running AI model</div>
+                    <div class="loading-step" id="step3">⬜ Generating advice</div>
+                </div>
+            </div>
+
+            <div class="result-card" id="resultCard">
+                <div class="result-header" id="resultHeader">
+                    <div class="result-badge" id="resultBadge">✅ Healthy</div>
+                    <div class="result-disease-name" id="resultDisease">Loading...</div>
+                </div>
+                <div class="result-body">
+                    <div class="metrics-row">
+                        <div class="metric">
+                            <div class="metric-label">Condition</div>
+                            <div class="metric-value" id="metricCondition">—</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Confidence</div>
+                            <div class="metric-value" id="metricConf">—</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Severity</div>
+                            <div class="metric-value" id="metricSeverity">—</div>
+                        </div>
+                    </div>
+
+                    <div class="conf-bar-wrap">
+                        <div class="conf-bar-label">
+                            <span>Model Confidence</span>
+                            <span id="confPct">—</span>
+                        </div>
+                        <div class="conf-bar-track">
+                            <div class="conf-bar-fill" id="confBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="advice-box" id="adviceBox">
+                        <div class="advice-label">💡 AI Advisory</div>
+                        <div class="advice-text" id="adviceText">Loading advice...</div>
+                    </div>
+
+                    <button class="btn-reset" onclick="resetDetection()">↺ Analyse Another Pod</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const imageInput = document.getElementById('imageInput');
+    const uploadZone = document.getElementById('uploadZone');
+    const previewBox = document.getElementById('previewBox');
+    const previewImg = document.getElementById('previewImg');
+    const previewName = document.getElementById('previewName');
+    const removeBtn = document.getElementById('removeBtn');
+    const analyseBtn = document.getElementById('analyseBtn');
+    const emptyState = document.getElementById('emptyState');
+    const loadingState = document.getElementById('loadingState');
+    const resultCard = document.getElementById('resultCard');
+
+    imageInput.addEventListener('change', () => {
+        if (imageInput.files[0]) showPreview(imageInput.files[0]);
+    });
+
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault(); uploadZone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) { imageInput.files = e.dataTransfer.files; showPreview(file); }
+    });
+
+    function showPreview(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        previewBox.style.display = 'block';
+        previewName.textContent = file.name;
+        // ← remove: analyseBtn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+    }
+
+function resetUpload() {
+    imageInput.value = '';
+    previewBox.style.display = 'none';
+    previewImg.src = ''; previewName.textContent = '';
+    // ← remove: analyseBtn.disabled = true;
+    }
+
+    function animateLoadingSteps() {
+        const labels = ['Processing image','Running AI model','Generating advice'];
+        const ids = ['step1','step2','step3'];
+        let i = 0;
+        const iv = setInterval(() => {
+            if (i > 0) { document.getElementById(ids[i-1]).innerHTML = `✅ ${labels[i-1]}`; document.getElementById(ids[i-1]).classList.remove('active'); }
+            if (i < ids.length) { document.getElementById(ids[i]).innerHTML = `<div class="loading-dot"></div> ${labels[i]}`; document.getElementById(ids[i]).classList.add('active'); }
+            i++; if (i > ids.length) clearInterval(iv);
+        }, 900);
+    }
+
+    async function analyseImage() {
+    if (!imageInput.files.length) {
+        showError('Please upload an image before analysing.');
+        return;
+    }
+
+    document.getElementById('errorMsg').style.display = 'none';
+    emptyState.style.display = 'none';
+    resultCard.style.display = 'none';
+    loadingState.style.display = 'block';
+
+    ['step1','step2','step3'].forEach((s,i) => {
+        document.getElementById(s).className = 'loading-step';
+        document.getElementById(s).innerHTML = `⬜ ${['Processing image','Running AI model','Generating advice'][i]}`;
+    });
+    animateLoadingSteps();
+
+    const formData = new FormData();
+    formData.append('image', imageInput.files[0]);
+
+    try {
+        const response = await fetch('/predict', { method: 'POST', body: formData });
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+            loadingState.style.display = 'none';
+            emptyState.style.display = 'block';
+            showError(data.error || 'Server returned an error. Please try again.');
+            return;
+        }
+
+        await new Promise(r => setTimeout(r, 600));
+        showResult(data);
+    } catch (err) {
+        loadingState.style.display = 'none';
+        emptyState.style.display = 'block';
+        showError('Could not connect to the server. Please try again.');
+    }
+}
+
+    function showError(msg) {
+    const box = document.getElementById('errorMsg');
+    document.getElementById('errorText').textContent = msg;
+    box.style.display = 'block';
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function showResult(data) {
+        loadingState.style.display = 'none';
+        resultCard.style.display = 'block';
+        resultCard.style.animation = 'slideIn 0.4s ease both';
+        const pred = data.prediction.toUpperCase();
+        const conf = Math.round(data.confidence * 100);
+        const severity = data.severity;
+        const header = document.getElementById('resultHeader');
+        const badge = document.getElementById('resultBadge');
+        const diseaseName = document.getElementById('resultDisease');
+        if (pred === 'HEALTHY') {
+            header.className = 'result-header healthy';
+            badge.textContent = '✅ No Disease';
+            diseaseName.textContent = 'Healthy Pod';
+        } else if (conf >= 85) {
+            header.className = 'result-header disease';
+            badge.textContent = '⚠️ Disease Detected';
+            diseaseName.textContent = formatName(pred);
+        } else {
+            header.className = 'result-header warning';
+            badge.textContent = '⚠️ Possible Disease';
+            diseaseName.textContent = formatName(pred);
+        }
+        document.getElementById('metricCondition').textContent = formatName(pred);
+        document.getElementById('metricConf').textContent = conf + '%';
+        const sevEl = document.getElementById('metricSeverity');
+        sevEl.textContent = severity;
+        sevEl.className = 'metric-value severity-' + severity.toLowerCase();
+        document.getElementById('confPct').textContent = conf + '%';
+        setTimeout(() => { document.getElementById('confBar').style.width = conf + '%'; }, 100);
+        const adviceBox = document.getElementById('adviceBox');
+        adviceBox.className = 'advice-box';
+        if (severity === 'SEVERE') adviceBox.classList.add('severe');
+        else if (severity === 'MODERATE') adviceBox.classList.add('moderate');
+        document.getElementById('adviceText').textContent = data.advice;
+    }
+
+    function formatName(pred) {
+        const names = { 'BLACKPOD':'Black Pod Rot', 'FROSTYPOD':'Frosty Pod Rot', 'MIRID':'Mirid (Capsid)', 'HEALTHY':'Healthy Pod' };
+        return names[pred] || pred;
+    }
+
+    function resetDetection() {
+        resultCard.style.display = 'none';
+        emptyState.style.display = 'block';
+        emptyState.querySelector('.empty-title').textContent = 'No analysis yet';
+        emptyState.querySelector('.empty-desc').textContent = 'Upload a cocoa pod image on the left and click Analyse to see your results here.';
+        resetUpload();
+        document.getElementById('confBar').style.width = '0%';
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CocoaGuard — Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --brown-dark: #2C1A0E;
+            --brown-mid: #5C3317;
+            --brown-light: #8B4513;
+            --gold: #C8922A;
+            --gold-light: #E8B84B;
+            --cream: #FDF6EC;
+            --cream-dark: #F5E6D0;
+            --green-dark: #1B4332;
+            --green-mid: #2D6A4F;
+            --green-light: #52B788;
+            --green-pale: #D8F3DC;
+            --text-dark: #1A0F08;
+            --text-mid: #4A3728;
+            --text-light: #8B7355;
+            --sidebar-w: 260px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #F5EFE6;
+            color: var(--text-dark);
+            display: flex;
+            min-height: 100vh;
+        }
+
+
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--brown-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            z-index: 20;
+            overflow: hidden;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            width: 300px; height: 300px;
+            border-radius: 50%;
+            background: rgba(200,146,42,0.06);
+            top: -100px; right: -100px;
+            pointer-events: none;
+        }
+
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            background: rgba(200,146,42,0.04);
+            bottom: -60px; left: -60px;
+            pointer-events: none;
+        }
+
+        .sidebar-top {
+            padding: 2rem 1.8rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            position: relative; z-index: 1;
+        }
+
+        .sidebar-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem; font-weight: 900;
+            color: white; text-decoration: none;
+            display: flex; align-items: center; gap: 0.6rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .sidebar-logo span { color: var(--gold-light); }
+
+        .sidebar-logo-icon {
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .admin-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: rgba(200,146,42,0.15);
+            border: 1px solid rgba(200,146,42,0.25);
+            border-radius: 8px; padding: 0.4rem 0.8rem;
+            font-size: 0.72rem; font-weight: 800;
+            color: var(--gold-light);
+            letter-spacing: 0.08em; text-transform: uppercase;
+        }
+
+        .sidebar-nav {
+            padding: 1.5rem 1rem;
+            flex: 1;
+            position: relative; z-index: 1;
+        }
+
+        .nav-section-label {
+            font-size: 0.65rem; font-weight: 800;
+            letter-spacing: 0.14em; text-transform: uppercase;
+            color: rgba(255,255,255,0.25);
+            padding: 0 0.8rem; margin-bottom: 0.5rem; margin-top: 1rem;
+        }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 0.7rem;
+            padding: 0.7rem 0.8rem;
+            border-radius: 10px;
+            text-decoration: none;
+            color: rgba(255,255,255,0.55);
+            font-size: 0.88rem; font-weight: 500;
+            transition: all 0.2s;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-item:hover { background: rgba(255,255,255,0.07); color: white; }
+        .nav-item.active { background: rgba(200,146,42,0.15); color: var(--gold-light); }
+
+        .nav-item-icon {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.07);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.95rem;
+        }
+
+        .nav-item.active .nav-item-icon { background: rgba(200,146,42,0.2); }
+
+        .sidebar-footer {
+            padding: 1.2rem 1rem 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            position: relative; z-index: 1;
+        }
+
+        .admin-user {
+            display: flex; align-items: center; gap: 0.8rem;
+            padding: 0.6rem 0.8rem; border-radius: 10px;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-avatar {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--gold), var(--brown-mid));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; font-weight: 800; color: white;
+        }
+
+        .admin-info-name { font-size: 0.85rem; font-weight: 700; color: white; }
+        .admin-info-role { font-size: 0.72rem; color: rgba(255,255,255,0.35); }
+
+        .btn-logout {
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.6rem 0.8rem; border-radius: 10px;
+            text-decoration: none; color: rgba(255,255,255,0.4);
+            font-size: 0.82rem; font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover { background: rgba(255,0,0,0.1); color: #ff6b6b; }
+
+
+        .main {
+            margin-left: var(--sidebar-w);
+            flex: 1;
+            padding: 2.5rem 2.5rem 5rem;
+            min-height: 100vh;
+        }
+
+
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 2.5rem;
+            animation: fadeUp 0.4s ease both;
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem; font-weight: 900;
+            color: var(--brown-dark);
+        }
+
+        .page-subtitle { font-size: 0.88rem; color: var(--text-light); margin-top: 0.2rem; }
+
+        .topbar-date {
+            font-size: 0.82rem; color: var(--text-light);
+            background: white; padding: 0.5rem 1rem;
+            border-radius: 50px;
+            border: 1px solid rgba(92,51,23,0.1);
+        }
+
+
+        .flash { padding: 0.8rem 1.2rem; border-radius: 12px; font-size: 0.85rem; margin-bottom: 1.5rem; font-weight: 500; }
+        .error { background: #FFF5F5; color: #C0392B; border: 1px solid #FADADD; }
+        .success { background: #F0FFF4; color: var(--green-dark); border: 1px solid #C3E6CB; }
+
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.6rem;
+            box-shadow: 0 2px 16px rgba(92,51,23,0.07);
+            border: 1px solid rgba(92,51,23,0.06);
+            display: flex; align-items: center; gap: 1.2rem;
+            animation: fadeUp 0.5s ease both;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative; overflow: hidden;
+        }
+
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(92,51,23,0.12); }
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            right: -20px; top: -20px;
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            opacity: 0.05;
+        }
+
+        .stat-card:nth-child(1)::after { background: var(--brown-dark); }
+        .stat-card:nth-child(2)::after { background: var(--gold); }
+        .stat-card:nth-child(3)::after { background: var(--green-dark); }
+
+        .stat-icon {
+            width: 54px; height: 54px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; flex-shrink: 0;
+        }
+
+        .icon-brown { background: var(--cream-dark); }
+        .icon-gold { background: rgba(200,146,42,0.1); }
+        .icon-green { background: var(--green-pale); }
+
+        .stat-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem; font-weight: 900;
+            color: var(--brown-dark); line-height: 1;
+        }
+
+        .stat-label { font-size: 0.78rem; color: var(--text-light); font-weight: 500; margin-top: 0.2rem; }
+
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1.6fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.8rem;
+            box-shadow: 0 2px 16px rgba(92,51,23,0.07);
+            border: 1px solid rgba(92,51,23,0.06);
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.2s; }
+        .card:nth-child(2) { animation-delay: 0.3s; }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem; font-weight: 700;
+            color: var(--brown-dark); margin-bottom: 1.5rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px; height: 18px;
+            background: var(--gold); border-radius: 2px;
+        }
+
+
+        .disease-stat-row {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(92,51,23,0.06);
+        }
+
+        .disease-stat-row:last-child { border-bottom: none; }
+
+        .disease-stat-name {
+            width: 110px; font-size: 0.85rem; font-weight: 600;
+            color: var(--text-mid); flex-shrink: 0;
+        }
+
+        .disease-bar-wrap { flex: 1; }
+        .disease-bar-bg { height: 8px; background: var(--cream-dark); border-radius: 4px; overflow: hidden; }
+        .disease-bar { height: 100%; border-radius: 4px; transition: width 1s ease; }
+
+        .bar-blackpod { background: linear-gradient(to right, #4A235A, #7D3C98); }
+        .bar-frostypod { background: linear-gradient(to right, #1A5276, #2E86C1); }
+        .bar-mirid { background: linear-gradient(to right, #7D6608, #D4AC0D); }
+        .bar-healthy { background: linear-gradient(to right, var(--green-dark), var(--green-light)); }
+        .bar-default { background: linear-gradient(to right, var(--brown-mid), var(--gold)); }
+
+        .disease-stat-count {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem; font-weight: 900;
+            color: var(--brown-dark); width: 30px; text-align: right;
+        }
+
+    
+        .users-card { animation-delay: 0.4s; }
+
+        .users-table { width: 100%; border-collapse: collapse; }
+
+        .users-table th {
+            font-size: 0.7rem; font-weight: 800;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--text-light); padding: 0 1rem 0.8rem;
+            text-align: left;
+            border-bottom: 2px solid rgba(92,51,23,0.08);
+        }
+
+        .users-table td {
+            padding: 1rem;
+            font-size: 0.87rem; color: var(--text-mid);
+            border-bottom: 1px solid rgba(92,51,23,0.05);
+            vertical-align: middle;
+        }
+
+        .users-table tr:last-child td { border-bottom: none; }
+        .users-table tr:hover td { background: #FDF9F5; }
+
+        .user-cell {
+            display: flex; align-items: center; gap: 0.8rem;
+        }
+
+        .user-table-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: var(--cream-dark);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 0.9rem; font-weight: 700; color: var(--brown-mid);
+            flex-shrink: 0;
+            border: 2px solid rgba(92,51,23,0.1);
+        }
+
+        .user-table-name { font-weight: 600; color: var(--text-dark); font-size: 0.88rem; }
+        .user-table-id { font-size: 0.72rem; color: var(--text-light); }
+
+        .joined-text { font-size: 0.8rem; color: var(--text-light); }
+
+        .btn-delete {
+            padding: 0.35rem 0.9rem;
+            background: #FFF5F5;
+            color: #C0392B;
+            border: 1px solid #FADADD;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.78rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+        }
+
+        .btn-delete:hover { background: #C0392B; color: white; border-color: #C0392B; }
+
+ 
+        .table-empty {
+            text-align: center; padding: 3rem;
+            color: var(--text-light); font-size: 0.88rem;
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1024px) {
+            .two-col { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 1.5rem 1rem 4rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="sidebar-top">
+        <a href="/" class="sidebar-logo">
+            <div class="sidebar-logo-icon">🌿</div>
+            Cocoa<span>Guard</span>
+        </a>
+        <div class="admin-badge">⚙️ Admin Panel</div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Overview</div>
+        <a href="/admin" class="nav-item active">
+            <div class="nav-item-icon">📊</div>
+            Dashboard
+        </a>
+
+        <div class="nav-section-label">System</div>
+        <a href="/" class="nav-item">
+            <div class="nav-item-icon">🌐</div>
+            View Site
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="admin-user">
+            <div class="admin-avatar">A</div>
+            <div>
+                <div class="admin-info-name">{{ session['user_name'] }}</div>
+                <div class="admin-info-role">Administrator</div>
+            </div>
+        </div>
+        <a href="/logout" class="btn-logout">
+    🚪 Logout
+         </a>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div>
+            <div class="page-title">Dashboard</div>
+            <div class="page-subtitle">Overview of CocoaGuard system activity</div>
+        </div>
+        <div class="topbar-date" id="topbarDate"></div>
+    </div>
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- STATS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon icon-brown">👥</div>
+            <div>
+                <div class="stat-num">{{ total_users }}</div>
+                <div class="stat-label">Registered Users</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-gold">🔬</div>
+            <div>
+                <div class="stat-num">{{ total_predictions }}</div>
+                <div class="stat-label">Total Predictions</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-green">💊</div>
+            <div>
+                <div class="stat-num">{{ disease_stats | length }}</div>
+                <div class="stat-label">Disease Classes</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TWO COLUMN -->
+    <div class="two-col">
+
+        <!-- DISEASE STATS -->
+        <div class="card">
+            <div class="card-title">Detection Breakdown</div>
+            {% if disease_stats %}
+                {% set max_count = disease_stats | map(attribute='count') | max %}
+                {% for stat in disease_stats %}
+                <div class="disease-stat-row">
+                    <div class="disease-stat-name">
+                        {% set p = stat.prediction.upper() %}
+                        {% if p == 'HEALTHY' %}✅ Healthy
+                        {% elif p == 'BLACKPOD' %}🖤 Black Pod
+                        {% elif p == 'FROSTYPOD' %}❄️ Frosty Pod
+                        {% elif p == 'MIRID' %}🐛 Mirid
+                        {% else %}{{ stat.prediction }}{% endif %}
+                    </div>
+                    <div class="disease-bar-wrap">
+                        <div class="disease-bar-bg">
+                            <div class="disease-bar
+                                {% set p = stat.prediction.upper() %}
+                                {% if p == 'BLACKPOD' %}bar-blackpod
+                                {% elif p == 'FROSTYPOD' %}bar-frostypod
+                                {% elif p == 'MIRID' %}bar-mirid
+                                {% elif p == 'HEALTHY' %}bar-healthy
+                                {% else %}bar-default{% endif %}"
+                                data-width="{{ ((stat.count / max_count) * 100) | int }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="disease-stat-count">{{ stat.count }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="table-empty">No predictions yet.</div>
+            {% endif %}
+        </div>
+
+        <!-- QUICK STATS CARD -->
+        <div class="card">
+            <div class="card-title">System Summary</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="background: var(--cream-dark); border-radius: 14px; padding: 1.2rem; text-align: center;">
+                    <div style="font-size: 1.8rem; margin-bottom: 0.3rem;">👥</div>
+                    <div style="font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:900; color:var(--brown-dark);">{{ total_users }}</div>
+                    <div style="font-size:0.75rem; color:var(--text-light); margin-top:0.2rem;">Total Users</div>
+                </div>
+                <div style="background: rgba(200,146,42,0.08); border-radius: 14px; padding: 1.2rem; text-align: center;">
+                    <div style="font-size: 1.8rem; margin-bottom: 0.3rem;">🔬</div>
+                    <div style="font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:900; color:var(--brown-dark);">{{ total_predictions }}</div>
+                    <div style="font-size:0.75rem; color:var(--text-light); margin-top:0.2rem;">Total Scans</div>
+                </div>
+                {% if total_users > 0 %}
+                <div style="background: var(--green-pale); border-radius: 14px; padding: 1.2rem; text-align: center; grid-column: span 2;">
+                    <div style="font-size: 1.8rem; margin-bottom: 0.3rem;">📊</div>
+                    <div style="font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:900; color:var(--green-dark);">
+                        {{ (total_predictions / total_users) | round(1) }}
+                    </div>
+                    <div style="font-size:0.75rem; color:var(--text-light); margin-top:0.2rem;">Avg Scans Per User</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- USERS TABLE -->
+    <div class="card users-card">
+        <div class="card-title">Registered Users</div>
+
+        {% if users %}
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Joined</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>
+                        <div class="user-cell">
+                            <div class="user-table-avatar">{{ user.name[0].upper() }}</div>
+                            <div>
+                                <div class="user-table-name">{{ user.name }}</div>
+                                <div class="user-table-id">#{{ user.id }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ user.email }}</td>
+                    <td><span class="joined-text">{{ user.created_at }}</span></td>
+                    <td>
+                        <form method="POST" action="/admin/delete_user/{{ user.id }}" onsubmit="return confirm('Delete {{ user.name }}? This cannot be undone.')">
+                            <button type="submit" class="btn-delete">🗑 Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <div class="table-empty">No users registered yet.</div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+    // Date in topbar
+    const now = new Date();
+    document.getElementById('topbarDate').textContent = now.toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+
+    // Animate disease bars
+    document.querySelectorAll('.disease-bar').forEach(bar => {
+        const w = bar.getAttribute('data-width');
+        setTimeout(() => { bar.style.width = w + '%'; }, 200);
+    });
+</script>
+
+</body>
+</html>

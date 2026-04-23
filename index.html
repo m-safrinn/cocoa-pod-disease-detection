@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CocoaPod — AI Disease Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --brown-dark: #2C1A0E;
+            --brown-mid: #5C3317;
+            --gold: #C8922A;
+            --gold-light: #E8B84B;
+            --cream: #FDF6EC;
+            --cream-dark: #F5E6D0;
+            --green-leaf: #3A6B35;
+            --text-dark: #1A0F08;
+            --text-mid: #4A3728;
+            --text-light: #8B7355;
+        }
+
+        html { scroll-behavior: smooth; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text-dark); overflow-x: hidden; }
+
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.2rem 6%;
+            background: rgba(253, 246, 236, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(200, 146, 42, 0.2);
+            transition: box-shadow 0.3s;
+        }
+        nav.scrolled { box-shadow: 0 4px 30px rgba(44, 26, 14, 0.12); }
+        .nav-logo {
+            font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 900;
+            color: var(--brown-dark); text-decoration: none; display: flex; align-items: center; gap: 0.5rem;
+        }
+        .nav-logo span { color: var(--gold); }
+        .nav-logo-icon {
+            width: 36px; height: 36px; background: var(--brown-dark); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+        }
+        .nav-links { display: flex; align-items: center; gap: 2.5rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-mid); font-size: 0.92rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--gold); }
+        .nav-actions { display: flex; gap: 0.8rem; align-items: center; }
+        .btn-outline {
+            padding: 0.5rem 1.2rem; border: 1.5px solid var(--brown-mid); border-radius: 50px;
+            background: transparent; color: var(--brown-mid); font-family: 'DM Sans', sans-serif;
+            font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none;
+        }
+        .btn-outline:hover { background: var(--brown-mid); color: var(--cream); }
+        .btn-solid {
+            padding: 0.5rem 1.4rem; border: none; border-radius: 50px; background: var(--gold);
+            color: var(--brown-dark); font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+            font-weight: 700; cursor: pointer; transition: all 0.2s; text-decoration: none;
+        }
+        .btn-solid:hover { background: var(--gold-light); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(200,146,42,0.4); }
+
+
+        .hero {
+            min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr;
+            align-items: center; padding: 7rem 6% 4rem; position: relative; overflow: hidden;
+        }
+        .hero-bg {
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(90,158,82,0.08) 0%, transparent 70%),
+                        radial-gradient(ellipse 40% 60% at 20% 80%, rgba(200,146,42,0.06) 0%, transparent 70%);
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: rgba(200,146,42,0.12); border: 1px solid rgba(200,146,42,0.3);
+            border-radius: 50px; padding: 0.4rem 1rem; font-size: 0.8rem; font-weight: 600;
+            color: var(--gold); letter-spacing: 0.05em; text-transform: uppercase;
+            margin-bottom: 1.5rem; animation: fadeUp 0.6s ease both;
+        }
+        .hero-badge::before {
+            content: ''; width: 6px; height: 6px; border-radius: 50%;
+            background: var(--gold); animation: pulse 2s infinite;
+        }
+        .hero-title {
+            font-family: 'Playfair Display', serif; font-size: clamp(2.8rem, 5vw, 4.2rem);
+            font-weight: 900; line-height: 1.1; color: var(--brown-dark);
+            margin-bottom: 1.5rem; animation: fadeUp 0.6s 0.1s ease both;
+        }
+        .hero-title em { font-style: normal; color: var(--gold); position: relative; }
+        .hero-title em::after {
+            content: ''; position: absolute; bottom: 4px; left: 0; right: 0;
+            height: 3px; background: var(--gold); opacity: 0.3; border-radius: 2px;
+        }
+        .hero-desc {
+            font-size: 1.05rem; line-height: 1.75; color: var(--text-mid);
+            max-width: 480px; margin-bottom: 2.5rem; animation: fadeUp 0.6s 0.2s ease both;
+        }
+        .hero-actions { display: flex; gap: 1rem; align-items: center; animation: fadeUp 0.6s 0.3s ease both; }
+        .btn-hero {
+            padding: 0.9rem 2.2rem; border-radius: 50px; font-family: 'DM Sans', sans-serif;
+            font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.25s;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;
+        }
+        .btn-hero-primary {
+            background: var(--brown-dark); color: var(--cream); border: none;
+            box-shadow: 0 6px 24px rgba(44,26,14,0.3);
+        }
+        .btn-hero-primary:hover { background: var(--brown-mid); transform: translateY(-2px); box-shadow: 0 10px 32px rgba(44,26,14,0.4); }
+        .btn-hero-secondary { background: transparent; color: var(--brown-dark); border: 2px solid var(--brown-dark); }
+        .btn-hero-secondary:hover { background: var(--brown-dark); color: var(--cream); transform: translateY(-2px); }
+        .hero-stats { display: flex; gap: 2rem; margin-top: 3rem; animation: fadeUp 0.6s 0.5s ease both; }
+        .hero-stat-num { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 900; color: var(--brown-dark); }
+        .hero-stat-num span { color: var(--gold); }
+        .hero-stat-label { font-size: 0.78rem; color: var(--text-light); font-weight: 500; }
+        .hero-visual { display: flex; justify-content: center; align-items: center; position: relative; animation: fadeIn 0.8s 0.4s ease both; }
+        .hero-card-main {
+            background: white; border-radius: 24px; padding: 2rem;
+            box-shadow: 0 20px 60px rgba(44,26,14,0.15); width: 340px; position: relative; z-index: 2;
+        }
+        .hero-card-img {
+            width: 100%; height: 200px;
+            background: linear-gradient(135deg, #3A6B35 0%, #5A9E52 50%, #8B4513 100%);
+            border-radius: 16px; margin-bottom: 1.2rem; display: flex;
+            align-items: center; justify-content: center; font-size: 4rem; position: relative; overflow: hidden;
+        }
+        .hero-card-img::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.2)); }
+        .hero-card-tag {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: #FFF0F0; color: #D32F2F; border-radius: 50px;
+            padding: 0.3rem 0.9rem; font-size: 0.78rem; font-weight: 700; margin-bottom: 0.6rem;
+        }
+        .hero-card-disease { font-weight: 700; font-size: 1rem; color: var(--brown-dark); margin-bottom: 0.3rem; }
+        .hero-card-bar { height: 6px; background: var(--cream-dark); border-radius: 3px; margin-top: 0.8rem; overflow: hidden; }
+        .hero-card-bar-fill {
+            height: 100%; width: 87%;
+            background: linear-gradient(to right, var(--gold), var(--green-leaf));
+            border-radius: 3px; animation: grow 1.5s 1s ease both;
+        }
+        .hero-card-float {
+            position: absolute; background: white; border-radius: 16px; padding: 1rem 1.2rem;
+            box-shadow: 0 8px 30px rgba(44,26,14,0.12); font-size: 0.82rem; font-weight: 600;
+            color: var(--brown-dark); display: flex; align-items: center; gap: 0.5rem;
+        }
+        .hero-card-float.top-left { top: -20px; left: -40px; animation: float 3s ease-in-out infinite; }
+        .hero-card-float.bottom-right { bottom: -20px; right: -40px; animation: float 3s 1.5s ease-in-out infinite; }
+
+
+        .section { padding: 6rem 6%; }
+        .section-label { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.8rem; }
+        .section-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; color: var(--brown-dark); margin-bottom: 1rem; line-height: 1.15; }
+        .section-subtitle { font-size: 1rem; color: var(--text-mid); max-width: 560px; line-height: 1.7; }
+
+
+        .hiw-section { background: var(--brown-dark); position: relative; overflow: hidden; }
+        .hiw-section::before { content: ''; position: absolute; top: -100px; right: -100px; width: 400px; height: 400px; border-radius: 50%; background: rgba(200,146,42,0.06); }
+        .hiw-section .section-title { color: var(--cream); }
+        .hiw-section .section-subtitle { color: rgba(253,246,236,0.65); }
+        .hiw-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 2rem; margin-top: 3.5rem; position: relative; }
+        .hiw-grid::before { content: ''; position: absolute; top: 40px; left: 10%; width: 80%; height: 2px; background: linear-gradient(to right, transparent, var(--gold), transparent); opacity: 0.3; }
+        .hiw-step { text-align: center; position: relative; animation: fadeUp 0.5s ease both; animation-play-state: paused; }
+        .hiw-step:nth-child(1) { animation-delay: 0.1s; }
+        .hiw-step:nth-child(2) { animation-delay: 0.2s; }
+        .hiw-step:nth-child(3) { animation-delay: 0.3s; }
+        .hiw-step:nth-child(4) { animation-delay: 0.4s; }
+        .hiw-icon {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: rgba(200,146,42,0.12); border: 2px solid rgba(200,146,42,0.25);
+            display: flex; align-items: center; justify-content: center; font-size: 2rem;
+            margin: 0 auto 1.2rem; position: relative; z-index: 1; transition: all 0.3s;
+        }
+        .hiw-step:hover .hiw-icon { background: var(--gold); border-color: var(--gold); transform: scale(1.1); }
+        .hiw-num {
+            position: absolute; top: -8px; right: -8px; width: 24px; height: 24px;
+            background: var(--gold); border-radius: 50%; font-size: 0.7rem; font-weight: 800;
+            color: var(--brown-dark); display: flex; align-items: center; justify-content: center;
+        }
+        .hiw-step h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--cream); margin-bottom: 0.6rem; }
+        .hiw-step p { font-size: 0.88rem; color: rgba(253,246,236,0.6); line-height: 1.65; }
+
+
+        .diseases-section { background: var(--cream-dark); }
+        .diseases-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.5rem; margin-top: 3rem; }
+        .disease-card {
+            background: white; border-radius: 20px; padding: 1.8rem 1.5rem; text-align: center;
+            transition: all 0.3s; cursor: pointer; border: 2px solid transparent;
+            animation: fadeUp 0.5s ease both; animation-play-state: paused;
+        }
+        .disease-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(44,26,14,0.12); border-color: var(--gold); }
+        .disease-emoji { font-size: 2.8rem; margin-bottom: 1rem; display: block; }
+        .disease-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--brown-dark); margin-bottom: 0.4rem; }
+        .disease-desc { font-size: 0.82rem; color: var(--text-light); line-height: 1.6; }
+        .disease-severity { display: inline-block; margin-top: 0.8rem; padding: 0.25rem 0.8rem; border-radius: 50px; font-size: 0.72rem; font-weight: 700; }
+        .sev-high { background: #FFF0F0; color: #D32F2F; }
+        .sev-med  { background: #FFF8E1; color: #F57F17; }
+        .sev-low  { background: #F0FFF4; color: #2E7D32; }
+
+
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+        .about-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+        .about-card { background: var(--cream-dark); border-radius: 20px; padding: 1.5rem; text-align: center; }
+        .about-card-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .about-card-title { font-weight: 700; color: var(--brown-dark); font-size: 0.9rem; }
+        .about-card-sub { font-size: 0.78rem; color: var(--text-light); margin-top: 0.3rem; }
+
+
+        .contact-section { background: var(--cream-dark); }
+        .contact-inner { max-width: 600px; margin: 0 auto; text-align: center; }
+        .contact-form { display: flex; flex-direction: column; gap: 1rem; text-align: left; margin-top: 2rem; }
+        .contact-form input, .contact-form textarea {
+            padding: 0.9rem 1.2rem; border: 1.5px solid rgba(44,26,14,0.15); border-radius: 12px;
+            font-family: 'DM Sans', sans-serif; font-size: 0.95rem; background: white;
+            outline: none; color: var(--text-dark); transition: border-color 0.2s;
+        }
+        .contact-form input:focus, .contact-form textarea:focus { border-color: var(--gold); }
+        .contact-form textarea { resize: vertical; }
+
+  
+        .cta-section {
+            background: linear-gradient(135deg, var(--brown-dark) 0%, var(--brown-mid) 100%);
+            text-align: center; padding: 6rem 6%; position: relative; overflow: hidden;
+        }
+        .cta-section::before { content: '🍫'; position: absolute; font-size: 20rem; opacity: 0.04; top: -4rem; right: -4rem; }
+        .cta-section .section-title { color: var(--cream); margin-bottom: 1rem; }
+        .cta-desc { color: rgba(253,246,236,0.7); margin: 0 auto 2.5rem; max-width: 500px; font-size: 1rem; line-height: 1.7; }
+        .btn-cta {
+            display: inline-flex; align-items: center; gap: 0.6rem; padding: 1rem 2.5rem;
+            background: var(--gold); color: var(--brown-dark); border: none; border-radius: 50px;
+            font-family: 'DM Sans', sans-serif; font-size: 1.05rem; font-weight: 800;
+            cursor: pointer; transition: all 0.25s; text-decoration: none;
+        }
+        .btn-cta:hover { background: var(--gold-light); transform: translateY(-3px); box-shadow: 0 12px 36px rgba(200,146,42,0.4); }
+
+
+        footer {
+            background: var(--brown-dark); color: rgba(253,246,236,0.5);
+            text-align: center; padding: 2rem 6%; font-size: 0.85rem;
+            border-top: 1px solid rgba(253,246,236,0.08);
+        }
+        footer span { color: var(--gold); }
+
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.4); } }
+        @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+        @keyframes grow { from { width: 0; } }
+
+        @media (max-width: 900px) {
+            .hero { grid-template-columns: 1fr; text-align: center; }
+            .hero-desc { margin: 0 auto 2rem; }
+            .hero-actions { justify-content: center; }
+            .hero-stats { justify-content: center; }
+            .hero-visual { margin-top: 3rem; }
+            .hero-card-float { display: none; }
+            .hiw-grid { grid-template-columns: repeat(2,1fr); }
+            .diseases-grid { grid-template-columns: repeat(2,1fr); }
+            .about-grid { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+        }
+        @media (max-width: 500px) {
+            .hiw-grid, .diseases-grid, .about-cards { grid-template-columns: 1fr; }
+            .nav-actions .btn-outline { display: none; }
+        }
+
+        .user-menu-wrap { position: relative; }
+
+        .user-menu-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: var(--cream-dark); border: 1.5px solid rgba(200,146,42,0.3);
+    border-radius: 50px; padding: 0.4rem 1rem 0.4rem 0.4rem;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem; font-weight: 600; color: var(--brown-dark);
+    transition: all 0.2s;
+        }
+        .user-menu-btn:hover { background: var(--cream); border-color: var(--gold); }
+
+        .user-menu-avatar {
+    width: 28px; height: 28px;
+    background: var(--gold); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.82rem; font-weight: 800; color: var(--brown-dark);
+        }
+
+        .user-dropdown {
+    display: none; position: absolute; top: calc(100% + 10px); right: 0;
+    background: white; border-radius: 16px; min-width: 200px;
+    box-shadow: 0 8px 32px rgba(44,26,14,0.15);
+    border: 1px solid rgba(200,146,42,0.15);
+    overflow: hidden; z-index: 200;
+    animation: fadeUp 0.2s ease both;
+        }
+        .user-dropdown.open { display: block; }
+
+        .user-dropdown-name {
+    font-weight: 700; font-size: 0.9rem;
+    color: var(--brown-dark); padding: 1rem 1rem 0.2rem;
+         }
+.user-dropdown-email {
+    font-size: 0.75rem; color: var(--text-light);
+    padding: 0 1rem 0.8rem; word-break: break-all;
+}
+.user-dropdown-divider {
+    height: 1px; background: rgba(44,26,14,0.08); margin: 0;
+}
+.user-dropdown-item {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.75rem 1rem; font-size: 0.88rem; font-weight: 600;
+    color: var(--text-mid); text-decoration: none;
+    transition: background 0.15s;
+}
+.user-dropdown-item:hover { background: var(--cream-dark); color: var(--brown-dark); }
+.user-dropdown-logout { color: #C0392B; }
+.user-dropdown-logout:hover { background: #FFF0F0; color: #C0392B; }
+
+</style>
+</head>
+<body>
+
+
+<nav id="navbar">
+    <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">🌿</div>
+        Cocoa<span>Guard</span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#diseases">Diseases</a></li>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#contact">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+    {% if session.get('user_name') %}
+    <div class="user-menu-wrap" id="userMenuWrap">
+        <button class="user-menu-btn" onclick="toggleUserMenu()">
+            <div class="user-menu-avatar">{{ session['user_name'][0].upper() }}</div>
+            <span>{{ session['user_name'].split()[0] }}</span>
+            <span style="font-size:0.7rem; opacity:0.6;">▼</span>
+        </button>
+        <div class="user-dropdown" id="userDropdown">
+       <div class="user-dropdown-name">{{ session['user_name'] }}</div>
+       <div class="user-dropdown-email">{{ session.get('user_email', 'admin@cocoaguard.com') }}</div>
+       <div class="user-dropdown-divider"></div>
+       {% if session.get('is_admin') %}
+          <a href="/admin" class="user-dropdown-item">⚙️ Admin Panel</a>
+           {% else %}
+          <a href="/dashboard" class="user-dropdown-item">📊 Dashboard</a>
+          <a href="/detect" class="user-dropdown-item">🔍 New Scan</a>
+      {% endif %}
+        <div class="user-dropdown-divider"></div>
+       <a href="/logout" class="user-dropdown-item user-dropdown-logout">🚪 Logout</a>
+    </div>
+    
+    {% else %}
+    <a href="#" onclick="openModal('login')" class="btn-outline">Login</a>
+    <a href="#" onclick="openModal('register')" class="btn-solid">Register</a>
+    {% endif %}
+</div>
+</nav>
+
+
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+        <h1 class="hero-title">
+            Cocoa Pod<br>
+            Disease Detection with <em>AI</em><br>
+       
+        </h1>
+        <p class="hero-desc">
+            Upload a photo of your cocoa pod and get instant disease detection powered by machine learning — plus expert treatment advice generated by AI. Protect your harvest, faster.
+        </p>
+        <div class="hero-actions">
+            <a href="#" onclick="openModal('login')" class="btn-hero btn-hero-primary">🔍 Get Started</a>
+            <a href="#how-it-works" class="btn-hero btn-hero-secondary">See How It Works</a>
+        </div>
+    </div>
+    <div class="hero-visual">
+        <div class="hero-card-float top-left">🤖 AI Analysing...</div>
+        <div class="hero-card-main">
+            <div class="hero-card-img">🌰</div>
+            <div class="hero-card-tag">⚠️ Disease Detected</div>
+            <div class="hero-card-disease">Black Pod Rot</div>
+            <div class="hero-card-bar"><div class="hero-card-bar-fill"></div></div>
+        </div>
+        <div class="hero-card-float bottom-right">✅ Advice Ready</div>
+    </div>
+</section>
+
+
+<section class="section hiw-section" id="how-it-works">
+    <div class="section-label">Simple Process</div>
+    <div class="section-title">How CocoaGuard Works</div>
+    <p class="section-subtitle">From photo to actionable advice in seconds — no technical knowledge required.</p>
+    <div class="hiw-grid">
+        <div class="hiw-step">
+            <div class="hiw-icon">📷<div class="hiw-num">1</div></div>
+            <h3>Upload a Photo</h3>
+            <p>Take a clear photo of your cocoa pod and upload it through our simple web interface.</p>
+        </div>
+        <div class="hiw-step">
+            <div class="hiw-icon">🧠<div class="hiw-num">2</div></div>
+            <h3>AI Analyses</h3>
+            <p>Our EfficientNet machine learning model scans the image and identifies any disease present.</p>
+        </div>
+        <div class="hiw-step">
+            <div class="hiw-icon">📊<div class="hiw-num">3</div></div>
+            <h3>Get Results</h3>
+            <p>Receive the disease name, confidence score, and severity level — instantly on screen.</p>
+        </div>
+        <div class="hiw-step">
+            <div class="hiw-icon">💡<div class="hiw-num">4</div></div>
+            <h3>Follow AI Advice</h3>
+            <p>Get clear, farmer-friendly treatment and prevention guidance powered by LLaMA 3 AI.</p>
+        </div>
+    </div>
+</section>
+
+
+<section class="section diseases-section" id="diseases">
+    <div class="section-label">What We Detect</div>
+    <div class="section-title">Cocoa Pod Diseases</div>
+    <p class="section-subtitle">CocoaGuard detects four key cocoa pod diseases with high accuracy.</p>
+    <div class="diseases-grid">
+        <div class="disease-card">
+            <span class="disease-emoji">🖤</span>
+            <div class="disease-name">Black Pod Rot</div>
+            <div class="disease-desc">Caused by Phytophthora fungus. Spreads rapidly in wet conditions and can devastate entire crops.</div>
+            <span class="disease-severity sev-high">High Risk</span>
+        </div>
+        <div class="disease-card">
+            <span class="disease-emoji">❄️</span>
+            <div class="disease-name">Frosty Pod Rot</div>
+            <div class="disease-desc">A fungal disease that covers pods in white spores. One of the most destructive cocoa diseases globally.</div>
+            <span class="disease-severity sev-high">High Risk</span>
+        </div>
+        <div class="disease-card">
+            <span class="disease-emoji">🐛</span>
+            <div class="disease-name">Mirid (Capsid)</div>
+            <div class="disease-desc">Insect pest damage caused by mirids feeding on pods and stems, leading to scarring and yield loss.</div>
+            <span class="disease-severity sev-med">Medium Risk</span>
+        </div>
+        <div class="disease-card">
+            <span class="disease-emoji">✅</span>
+            <div class="disease-name">Healthy Pod</div>
+            <div class="disease-desc">No disease detected. Your cocoa pod is in good condition. Continue regular monitoring and care.</div>
+            <span class="disease-severity sev-low">No Risk</span>
+        </div>
+    </div>
+</section>
+
+
+<section class="section" id="about" style="background: white;">
+    <div class="about-grid">
+        <div>
+            <div class="section-label">About Us</div>
+            <div class="section-title">Built for Cocoa Farmers Worldwide</div>
+            
+        </div>
+        <div class="about-cards">
+            <div class="about-card"><div class="about-card-icon">🤖</div><div class="about-card-title">EfficientNet + LLaMA 3</div><div class="about-card-sub">AI Technology Stack</div></div>
+            <div class="about-card"><div class="about-card-icon">🌍</div><div class="about-card-title">Global Dataset</div><div class="about-card-sub">3,009 training images</div></div>
+            <div class="about-card"><div class="about-card-icon">📱</div><div class="about-card-title">Mobile Friendly</div><div class="about-card-sub">Works on any device</div></div>
+        </div>
+    </div>
+</section>
+
+<section class="section contact-section" id="contact">
+    <div class="contact-inner">
+        <div class="section-label">Contact Us</div>
+        <div class="section-title">Get in Touch</div>
+        <p style="color:var(--text-mid);line-height:1.7;margin-top:1rem;">Have questions about CocoaGuard or want to report an issue? We'd love to hear from you.</p>
+        <form class="contact-form" id="contactForm">
+            <input type="text" placeholder="Your Name" required>
+            <input type="email" placeholder="Your Email" required>
+            <textarea placeholder="Your Message" rows="4" required></textarea>
+            <button type="submit" class="btn-cta" style="align-self:center;margin-top:0.5rem;">Send Message ✉️</button>
+        </form>
+    </div>
+</section>
+
+
+<section class="cta-section">
+    <div class="section-title">Ready to Protect Your Harvest?</div>
+    <p class="cta-desc">Join farmers using CocoaGuard to detect diseases early and save their crops with AI-powered precision.</p>
+    <a href="/detect" class="btn-cta">🚀 Start Detecting Now</a>
+</section>
+
+
+
+<footer>
+    <p>© 2025 <span>Agricultural Purpose Only</span> </p>
+</footer>
+
+
+
+<script>
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        navbar.classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.style.animationPlayState = 'running';
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.hiw-step, .disease-card').forEach(el => observer.observe(el));
+
+    document.getElementById('contactForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.textContent = '✅ Message Sent!';
+        btn.style.background = '#3A6B35';
+        btn.style.color = 'white';
+        setTimeout(() => {
+            btn.textContent = 'Send Message ✉️';
+            btn.style.background = '';
+            btn.style.color = '';
+            e.target.reset();
+        }, 3000);
+    });
+    
+function toggleUserMenu() {
+    document.getElementById('userDropdown').classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+    const wrap = document.getElementById('userMenuWrap');
+    if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('userDropdown').classList.remove('open');
+    }
+});
+
+function openModal(tab) {
+    document.getElementById('authModal').style.display = 'flex';
+    switchTab(tab);
+}
+
+function closeModal() {
+    document.getElementById('authModal').style.display = 'none';
+}
+
+function switchTab(tab) {
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const loginTab = document.getElementById('loginTab');
+    const registerTab = document.getElementById('registerTab');
+
+    if (tab === 'login') {
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        loginTab.style.color = '#1B4332';
+        loginTab.style.borderBottom = '2px solid #1B4332';
+        registerTab.style.color = '#888';
+        registerTab.style.borderBottom = 'none';
+    } else {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        registerTab.style.color = '#1B4332';
+        registerTab.style.borderBottom = '2px solid #1B4332';
+        loginTab.style.color = '#888';
+        loginTab.style.borderBottom = 'none';
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const popup = urlParams.get('popup');
+    if (popup) openModal(popup);
+});
+
+
+document.getElementById('authModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+</script>
+
+
+<div id="authModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:24px; padding:2.5rem; width:100%; max-width:420px; margin:1rem; position:relative; box-shadow: 0 20px 60px rgba(0,0,0,0.2);">
+        
+
+        <button onclick="closeModal()" style="position:absolute; top:1rem; right:1rem; background:none; border:none; font-size:1.4rem; cursor:pointer; color:#888;">✕</button>
+
+
+        <div style="text-align:center; margin-bottom:1.5rem;">
+            <div style="font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:900; color:#1B4332;">
+                🌿 Cocoa<span style="color:#C8922A;">Guard</span>
+            </div>
+        </div>
+
+
+        <div style="display:flex; border-bottom:2px solid #E0E0E0; margin-bottom:1.5rem;">
+            <button id="loginTab" onclick="switchTab('login')" style="flex:1; padding:0.7rem; border:none; background:none; font-family:'DM Sans',sans-serif; font-size:0.95rem; font-weight:700; cursor:pointer; color:#1B4332; border-bottom:2px solid #1B4332; margin-bottom:-2px;">Login</button>
+            <button id="registerTab" onclick="switchTab('register')" style="flex:1; padding:0.7rem; border:none; background:none; font-family:'DM Sans',sans-serif; font-size:0.95rem; font-weight:600; cursor:pointer; color:#888;">Register</button>
+        </div>
+
+ 
+        <div id="loginForm">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    {% if category == 'login_error' %}
+                        <p style="color:red; font-size:0.85rem; margin-bottom:1rem;">❌ {{ message }}</p>
+                    {% endif %}
+                    {% if category == 'login_success' %}
+                        <p style="color:green; font-size:0.85rem; margin-bottom:1rem;">✅ {{ message }}</p>
+                    {% endif %}
+                    {% if category == 'error' %}
+                        <p style="color:#C0392B; font-size:0.85rem; margin-bottom:1rem; background:#FFF0F0; padding:0.6rem 0.8rem; border-radius:8px;">🔒 {{ message }}</p>
+                    {% endif %}
+                {% endfor %}
+            {% endwith %}
+
+            <form method="POST" action="/login">
+                <div style="margin-bottom:1rem;">
+                    <label style="font-size:0.82rem; font-weight:700; color:#4A3728; display:block; margin-bottom:0.4rem;">Email</label>
+                    <input type="email" name="email" placeholder="you@example.com" required style="width:100%; padding:0.85rem 1rem; border:1.5px solid rgba(45,106,79,0.2); border-radius:12px; font-family:'DM Sans',sans-serif; font-size:0.95rem; outline:none;">
+                </div>
+                <div style="margin-bottom:1.5rem;">
+                    <label style="font-size:0.82rem; font-weight:700; color:#4A3728; display:block; margin-bottom:0.4rem;">Password</label>
+                    <input type="password" name="password" placeholder="Your password" required style="width:100%; padding:0.85rem 1rem; border:1.5px solid rgba(45,106,79,0.2); border-radius:12px; font-family:'DM Sans',sans-serif; font-size:0.95rem; outline:none;">
+                </div>
+                <button type="submit" style="width:100%; padding:0.95rem; background:#1B4332; color:white; border:none; border-radius:12px; font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:700; cursor:pointer;">Sign In →</button>
+            </form>
+            <p style="text-align:center; margin-top:1rem; font-size:0.85rem; color:#8B7355;">No account? <a href="#" onclick="switchTab('register')" style="color:#2D6A4F; font-weight:700;">Register here</a></p>
+        </div>
+
+     
+        <div id="registerForm" style="display:none;">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    {% if category == 'register_error' %}
+                        <p style="color:red; font-size:0.85rem; margin-bottom:1rem;">❌ {{ message }}</p>
+                    {% endif %}
+                {% endfor %}
+            {% endwith %}
+
+            <form method="POST" action="/register">
+                <div style="margin-bottom:1rem;">
+                    <label style="font-size:0.82rem; font-weight:700; color:#4A3728; display:block; margin-bottom:0.4rem;">Full Name</label>
+                    <input type="text" name="name" placeholder="Your name" required style="width:100%; padding:0.85rem 1rem; border:1.5px solid rgba(45,106,79,0.2); border-radius:12px; font-family:'DM Sans',sans-serif; font-size:0.95rem; outline:none;">
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label style="font-size:0.82rem; font-weight:700; color:#4A3728; display:block; margin-bottom:0.4rem;">Email</label>
+                    <input type="email" name="email" placeholder="you@example.com" required style="width:100%; padding:0.85rem 1rem; border:1.5px solid rgba(45,106,79,0.2); border-radius:12px; font-family:'DM Sans',sans-serif; font-size:0.95rem; outline:none;">
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label style="font-size:0.82rem; font-weight:700; color:#4A3728; display:block; margin-bottom:0.4rem;">Password</label>
+                    <input type="password" name="password" placeholder="Min 6 characters" required style="width:100%; padding:0.85rem 1rem; border:1.5px solid rgba(45,106,79,0.2); border-radius:12px; font-family:'DM Sans',sans-serif; font-size:0.95rem; outline:none;">
+                </div>
+                <div style="margin-bottom:1.5rem;">
+                    <label style="font-size:0.82rem; font-weight:700; color:#4A3728; display:block; margin-bottom:0.4rem;">Confirm Password</label>
+                    <input type="password" name="confirm_password" placeholder="Repeat password" required style="width:100%; padding:0.85rem 1rem; border:1.5px solid rgba(45,106,79,0.2); border-radius:12px; font-family:'DM Sans',sans-serif; font-size:0.95rem; outline:none;">
+                </div>
+                <button type="submit" style="width:100%; padding:0.95rem; background:#1B4332; color:white; border:none; border-radius:12px; font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:700; cursor:pointer;">Create Account →</button>
+            </form>
+            <p style="text-align:center; margin-top:1rem; font-size:0.85rem; color:#8B7355;">Have an account? <a href="#" onclick="switchTab('login')" style="color:#2D6A4F; font-weight:700;">Login here</a></p>
+        </div>
+    </div>
+</div>
+
+
+</body>
+</html>

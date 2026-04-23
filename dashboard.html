@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CocoaGuard — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --brown-dark: #2C1A0E;
+            --gold: #C8922A;
+            --gold-light: #E8B84B;
+            --cream: #FDF6EC;
+            --cream-dark: #F5E6D0;
+            --green-dark: #1B4332;
+            --green-mid: #2D6A4F;
+            --green-light: #52B788;
+            --green-pale: #D8F3DC;
+            --text-dark: #1A0F08;
+            --text-mid: #4A3728;
+            --text-light: #8B7355;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #F0F7F0;
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+
+        nav {
+            background: white;
+            border-bottom: 1px solid rgba(45,106,79,0.1);
+            padding: 1rem 6%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 20px rgba(27,67,50,0.06);
+            position: sticky; top: 0; z-index: 10;
+        }
+
+        .nav-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem; font-weight: 900;
+            color: var(--brown-dark); text-decoration: none;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .nav-logo span { color: var(--green-mid); }
+        .nav-logo-icon {
+            width: 34px; height: 34px; background: var(--green-dark);
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 1rem;
+        }
+
+        .nav-right {
+            display: flex; align-items: center; gap: 1rem;
+        }
+
+        .nav-user {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.88rem; color: var(--text-mid); font-weight: 500;
+        }
+
+        .nav-avatar {
+            width: 34px; height: 34px;
+            background: var(--green-pale);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; font-weight: 700; color: var(--green-dark);
+            border: 2px solid var(--green-light);
+        }
+
+        .nav-btn {
+            padding: 0.45rem 1.1rem;
+            border-radius: 50px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .nav-btn-detect {
+            background: var(--green-dark); color: white; border: none;
+        }
+        .nav-btn-detect:hover { background: var(--green-mid); transform: translateY(-1px); }
+
+        .nav-btn-logout {
+            background: transparent; color: var(--text-mid);
+            border: 1.5px solid rgba(45,106,79,0.2);
+        }
+        .nav-btn-logout:hover { background: #FFF0F0; color: #C0392B; border-color: #FADADD; }
+
+   
+        .main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem 5rem;
+        }
+
+   
+        .welcome {
+            margin-bottom: 2.5rem;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .welcome-label {
+            font-size: 0.78rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--green-light); margin-bottom: 0.4rem;
+        }
+
+        .welcome-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.6rem, 3vw, 2.2rem);
+            font-weight: 900; color: var(--green-dark);
+            margin-bottom: 0.3rem;
+        }
+
+        .welcome-sub {
+            font-size: 0.92rem; color: var(--text-light);
+        }
+
+ 
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem 1.8rem;
+            box-shadow: 0 2px 16px rgba(27,67,50,0.07);
+            border: 1px solid rgba(45,106,79,0.07);
+            display: flex; align-items: center; gap: 1.2rem;
+            animation: fadeUp 0.5s ease both;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(27,67,50,0.12); }
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+
+        .stat-icon {
+            width: 52px; height: 52px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; flex-shrink: 0;
+        }
+
+        .stat-icon.green { background: var(--green-pale); }
+        .stat-icon.gold { background: rgba(200,146,42,0.12); }
+        .stat-icon.brown { background: var(--cream-dark); }
+
+        .stat-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem; font-weight: 900; color: var(--green-dark);
+            line-height: 1;
+        }
+
+        .stat-label { font-size: 0.8rem; color: var(--text-light); margin-top: 0.2rem; font-weight: 500; }
+
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1.5rem;
+        }
+
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.8rem;
+            box-shadow: 0 2px 16px rgba(27,67,50,0.07);
+            border: 1px solid rgba(45,106,79,0.07);
+            animation: fadeUp 0.5s 0.2s ease both;
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem; font-weight: 700; color: var(--green-dark);
+            margin-bottom: 1.5rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px; height: 18px;
+            background: var(--green-mid); border-radius: 2px;
+        }
+
+
+        .account-avatar {
+            width: 72px; height: 72px;
+            background: linear-gradient(135deg, var(--green-dark), var(--green-mid));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem; font-weight: 900; color: white;
+            margin: 0 auto 1.2rem;
+        }
+
+        .account-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15rem; font-weight: 700;
+            color: var(--green-dark); text-align: center; margin-bottom: 0.3rem;
+        }
+
+        .account-email {
+            font-size: 0.82rem; color: var(--text-light);
+            text-align: center; margin-bottom: 1.5rem;
+            word-break: break-all;
+        }
+
+        .account-divider {
+            height: 1px; background: rgba(45,106,79,0.1);
+            margin: 1rem 0;
+        }
+
+        .account-stat {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.6rem 0;
+        }
+
+        .account-stat-label { font-size: 0.82rem; color: var(--text-light); }
+        .account-stat-value { font-size: 0.88rem; font-weight: 700; color: var(--green-dark); }
+
+        .btn-detect-big {
+            width: 100%; margin-top: 1.2rem;
+            padding: 0.85rem;
+            background: var(--green-dark); color: white;
+            border: none; border-radius: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.92rem; font-weight: 700;
+            cursor: pointer; transition: all 0.25s;
+            text-decoration: none; display: block; text-align: center;
+        }
+
+        .btn-detect-big:hover {
+            background: var(--green-mid);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(27,67,50,0.2);
+        }
+
+
+        .history-card { animation-delay: 0.3s; }
+
+        .history-empty {
+            text-align: center; padding: 3rem 1rem;
+            color: var(--text-light);
+        }
+
+        .history-empty-icon { font-size: 2.5rem; margin-bottom: 0.8rem; opacity: 0.4; }
+        .history-empty-text { font-size: 0.88rem; }
+
+        .history-table { width: 100%; border-collapse: collapse; }
+
+        .history-table th {
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--text-light); padding: 0 1rem 0.8rem;
+            text-align: left; border-bottom: 1px solid rgba(45,106,79,0.1);
+        }
+
+        .history-table td {
+            padding: 0.9rem 1rem;
+            font-size: 0.88rem; color: var(--text-mid);
+            border-bottom: 1px solid rgba(45,106,79,0.06);
+        }
+
+        .history-table tr:last-child td { border-bottom: none; }
+
+        .history-table tr:hover td { background: #F8FCF9; }
+
+        .disease-pill {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.25rem 0.8rem; border-radius: 50px;
+            font-size: 0.75rem; font-weight: 700;
+        }
+
+        .pill-healthy { background: #F0FFF4; color: #2E7D32; }
+        .pill-blackpod { background: #F3F0FF; color: #4A235A; }
+        .pill-frostypod { background: #EFF8FF; color: #1A5276; }
+        .pill-mirid { background: #FFF8E1; color: #7D6608; }
+
+        .severity-badge {
+            font-size: 0.72rem; font-weight: 700;
+            padding: 0.2rem 0.6rem; border-radius: 50px;
+        }
+
+        .sev-none { background: #F0FFF4; color: #2E7D32; }
+        .sev-mild { background: #FFFDE7; color: #F57F17; }
+        .sev-moderate { background: #FFF3E0; color: #E65100; }
+        .sev-severe { background: #FFF0F0; color: #C0392B; }
+
+        .conf-bar-wrap { display: flex; align-items: center; gap: 0.5rem; }
+        .conf-bar-bg { flex: 1; height: 5px; background: #E8F5E9; border-radius: 3px; overflow: hidden; }
+        .conf-bar { height: 100%; background: linear-gradient(to right, var(--green-mid), var(--green-light)); border-radius: 3px; }
+        .conf-text { font-size: 0.78rem; font-weight: 600; color: var(--green-mid); white-space: nowrap; }
+
+        .date-text { font-size: 0.78rem; color: var(--text-light); }
+
+
+        .flash { padding: 0.8rem 1rem; border-radius: 10px; font-size: 0.85rem; margin-bottom: 1.2rem; }
+        .error { background: #FFF5F5; color: #C0392B; border: 1px solid #FADADD; }
+        .success { background: #F0FFF4; color: var(--green-dark); border: 1px solid #C3E6CB; }
+
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+
+        @media (max-width: 900px) {
+            .two-col { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 500px) {
+            .stats-row { grid-template-columns: 1fr; }
+            .main { padding: 1.5rem 1rem 4rem; }
+        }
+    </style>
+</head>
+<body>
+
+
+<nav>
+    <a href="/" class="nav-logo">
+        <div class="nav-logo-icon">🌿</div>
+        Cocoa<span>Guard</span>
+    </a>
+    <div class="nav-right">
+        <div class="nav-user">
+            <div class="nav-avatar">{{ user_name[0].upper() }}</div>
+            <span>{{ user_name }}</span>
+        </div>
+<a href="/detect" class="nav-btn nav-btn-detect">🔍 New Scan</a>
+<a href="/" class="nav-btn nav-btn-logout">🏠 Home</a>
+<a href="/logout" class="nav-btn nav-btn-logout">Logout</a>
+    </div>
+</nav>
+
+
+<div class="main">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+
+    <div class="welcome">
+        <div class="welcome-label">My Dashboard</div>
+        <div class="welcome-title">Welcome back, {{ user_name.split()[0] }}! 👋</div>
+        <div class="welcome-sub">Here's an overview of your cocoa pod scans and account.</div>
+    </div>
+
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon green">🔬</div>
+            <div>
+                <div class="stat-num">{{ total_scans }}</div>
+                <div class="stat-label">Total Scans</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon gold">💊</div>
+            <div>
+                <div class="stat-num">
+                    {% set disease_count = history | selectattr('prediction', 'ne', 'HEALTHY') | list | length %}
+                    {{ disease_count }}
+                </div>
+                <div class="stat-label">Diseases Found</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon brown">✅</div>
+            <div>
+                <div class="stat-num">
+                    {% set healthy_count = history | selectattr('prediction', 'equalto', 'HEALTHY') | list | length %}
+                    {{ healthy_count }}
+                </div>
+                <div class="stat-label">Healthy Pods</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHARTS ROW -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
+
+    <!-- Doughnut Chart -->
+    <div class="card" style="animation-delay:0.2s;">
+        <div class="card-title">Scan Breakdown</div>
+        <div style="position:relative; height:220px; display:flex; align-items:center; justify-content:center;">
+            <canvas id="doughnutChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Bar Chart -->
+    <div class="card" style="animation-delay:0.3s;">
+        <div class="card-title">Recent Scan Activity</div>
+        <div style="position:relative; height:220px;">
+            <canvas id="barChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+    <div class="two-col">
+
+        
+
+
+        <div class="card">
+            <div class="card-title">Account</div>
+            <div class="account-avatar">{{ user_name[0].upper() }}</div>
+            <div class="account-name">{{ user_name }}</div>
+            <div class="account-email">{{ user_email }}</div>
+            <div class="account-divider"></div>
+            <div class="account-stat">
+                <span class="account-stat-label">Total Scans</span>
+                <span class="account-stat-value">{{ total_scans }}</span>
+            </div>
+            <div class="account-stat">
+                <span class="account-stat-label">Recent Scans Shown</span>
+                <span class="account-stat-value">{{ history | length }}</span>
+            </div>
+            <a href="/detect" class="btn-detect-big">🔍 Start New Scan</a>
+        </div>
+
+
+        <div class="card history-card">
+   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+    <div class="card-title" style="margin-bottom:0;">Recent Scan History</div>
+    {% if history %}
+    <form method="POST" action="/clear_history" onsubmit="return confirm('Clear all scan history? This cannot be undone.')">
+        <button type="submit" style="padding:0.4rem 1rem; background:#FFF0F0; color:#C0392B; border:1.5px solid #FADADD; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:0.78rem; font-weight:700; cursor:pointer;">
+            🗑️ Clear All
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+{% if history %}
+
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Condition</th>
+                        <th>Confidence</th>
+                        <th>Severity</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in history %}
+                    <tr>
+                        <td>
+                            {% set pred = record.prediction.upper() %}
+                            {% if pred == 'HEALTHY' %}
+                                <span class="disease-pill pill-healthy">✅ Healthy</span>
+                            {% elif pred == 'BLACKPOD' %}
+                                <span class="disease-pill pill-blackpod">🖤 Black Pod</span>
+                            {% elif pred == 'FROSTYPOD' %}
+                                <span class="disease-pill pill-frostypod">❄️ Frosty Pod</span>
+                            {% elif pred == 'MIRID' %}
+                                <span class="disease-pill pill-mirid">🐛 Mirid</span>
+                            {% else %}
+                                <span class="disease-pill">{{ record.prediction }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="conf-bar-wrap">
+                                <div class="conf-bar-bg">
+                                    <div class="conf-bar" id="bar-{{ loop.index }}" data-width="{{ (record.confidence * 100) | round(1) | int }}"></div>
+                                </div>
+                                <span class="conf-text">{{ (record.confidence * 100) | round(1) }}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% set sev = record.severity.upper() %}
+                            {% if sev == 'NONE' %}
+                                <span class="severity-badge sev-none">None</span>
+                            {% elif sev == 'MILD' %}
+                                <span class="severity-badge sev-mild">Mild</span>
+                            {% elif sev == 'MODERATE' %}
+                                <span class="severity-badge sev-moderate">Moderate</span>
+                            {% elif sev == 'SEVERE' %}
+                                <span class="severity-badge sev-severe">Severe</span>
+                            {% endif %}
+                        </td>
+                       <td>
+                          <span class="date-text">{{ record.created_at[:10] if record.created_at else '—' }}</span>
+                     </td>
+                     <td>
+                          <form method="POST" action="/delete_prediction/{{ record.id }}" onsubmit="return confirm('Delete this record?')">
+                               <button type="submit" style="background:none; border:none; cursor:pointer; font-size:1rem; opacity:0.5; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'" title="Delete">🗑️</button>
+                          </form>
+                     </td>
+                     </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="history-empty">
+                <div class="history-empty-icon">🍫</div>
+                <div class="history-empty-text">No scans yet. <a href="/detect" style="color: var(--green-mid); font-weight: 600;">Make your first scan!</a></div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+    // ── SAFE DATA FROM FLASK ──
+    let history = [];
+    try {
+        history = JSON.parse('{{ history | tojson | safe }}');
+    } catch(e) {
+        console.error('History parse error:', e);
+    }
+
+    const labelMap = {
+        HEALTHY: '✅ Healthy',
+        BLACKPOD: '🖤 Black Pod',
+        FROSTYPOD: '❄️ Frosty Pod',
+        MIRID: '🐛 Mirid'
+    };
+    const colorMap = {
+        HEALTHY: '#52B788',
+        BLACKPOD: '#7D3C98',
+        FROSTYPOD: '#2E86C1',
+        MIRID: '#D4AC0D'
+    };
+
+    // ── DOUGHNUT ──
+    const counts = { HEALTHY: 0, BLACKPOD: 0, FROSTYPOD: 0, MIRID: 0 };
+    history.forEach(r => {
+        const p = String(r.prediction).toUpperCase();
+        if (counts[p] !== undefined) counts[p]++;
+    });
+
+    const doughnutLabels = [];
+    const doughnutData = [];
+    const doughnutColors = [];
+    Object.keys(counts).forEach(k => {
+        if (counts[k] > 0) {
+            doughnutLabels.push(labelMap[k] || k);
+            doughnutData.push(counts[k]);
+            doughnutColors.push(colorMap[k] || '#C8922A');
+        }
+    });
+
+    if (doughnutData.length > 0) {
+        new Chart(document.getElementById('doughnutChart'), {
+            type: 'doughnut',
+            data: {
+                labels: doughnutLabels,
+                datasets: [{
+                    data: doughnutData,
+                    backgroundColor: doughnutColors,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { font: { family: 'DM Sans', size: 11 }, padding: 12, boxWidth: 12 }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    } else {
+        document.getElementById('doughnutChart').parentElement.innerHTML =
+            '<div style="text-align:center;color:#8B7355;font-size:0.88rem;padding:2rem;">No scan data yet.</div>';
+    }
+
+    // ── BAR ──
+    const recent = history.slice(0, 7).reverse();
+    const barLabels = recent.map(r => labelMap[String(r.prediction).toUpperCase()] || r.prediction);
+    const barData = recent.map(r => Math.round(parseFloat(r.confidence) * 100));
+    const barColors = recent.map(r => colorMap[String(r.prediction).toUpperCase()] || '#C8922A');
+
+    if (recent.length > 0) {
+        new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: barLabels,
+                datasets: [{
+                    label: 'Confidence %',
+                    data: barData,
+                    backgroundColor: barColors,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true, max: 100,
+                        ticks: { font: { family: 'DM Sans', size: 11 }, callback: val => val + '%' },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: {
+                        ticks: { font: { family: 'DM Sans', size: 10 }, maxRotation: 30 },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    } else {
+        document.getElementById('barChart').parentElement.innerHTML =
+            '<div style="text-align:center;color:#8B7355;font-size:0.88rem;padding:2rem;">No scan data yet.</div>';
+    }
+</script>
+
+
+
+
+
+
+
+</body>
+</html>
