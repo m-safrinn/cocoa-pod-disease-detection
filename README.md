@@ -8,6 +8,17 @@ A deep learning-powered web application that detects cocoa pod diseases from ima
 
 Cocoa farming is a vital agricultural industry, but pod diseases can cause significant crop losses. This application helps farmers and agricultural workers quickly identify diseases by simply uploading a photo of a cocoa pod — getting an instant prediction and actionable recommendations.
 
+## 📸 Screenshots
+
+### Home Page
+![Home Page](screenshots/homepage.png)
+
+### Detection Page
+![Detection Page](screenshots/detection.png)
+
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
+
 ---
 
 ## 🎯 Disease Classes
